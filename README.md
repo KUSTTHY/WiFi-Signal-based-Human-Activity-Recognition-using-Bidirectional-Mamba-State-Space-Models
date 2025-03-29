@@ -4,5 +4,7 @@ The model first uses 1D depthwise separable convolution to extract spatial featu
 
 Use the command line to select the running mode:：
 python run.py --dataset NTU-Fi-HumanID   # Run NTU-Fi-HumanID dataset
+
 python run.py --dataset NTU-Fi_HAR          # Run NTU-Fi_HAR dataset
+
 python run.py --dataset UT                         # Run   UT  dataset
