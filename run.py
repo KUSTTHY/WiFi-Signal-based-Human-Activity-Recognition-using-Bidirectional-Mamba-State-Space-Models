@@ -3,19 +3,19 @@ import torch.nn as nn
 import argparse
 from torch.utils.data import DataLoader
 from dataset import NTU_HAR_Dataset, UT_HAR_dataset  # 请根据实际情况修改
-from vision_mamba import FusionModel
+from bidirectional_mamba import FusionModel
 from train_and_test import train, test, val
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def main(args):
     # 数据集路径和参数设置
-    if args.dataset == 'NTU':
-        # NTU 数据集的路径
+    if args.dataset == 'NTU-Fi-HumanID':
+        # NTU-Fi-HumanID 数据集的路径
         train_root_dir = '/home/aip/Vim-main/DATA/NTU-Fi-HumanID/test_amp'
         test_root_dir = '/home/aip/Vim-main/DATA/NTU-Fi-HumanID/train_amp'
 
-        # 实例化 NTU 数据集
+        # 实例化 NTU-Fi-HumanID 数据集
         train_dataset = NTU_HAR_Dataset(root_dir=train_root_dir, modal='CSIamp')
         test_dataset = NTU_HAR_Dataset(root_dir=test_root_dir, modal='CSIamp')
 
@@ -27,6 +27,25 @@ def main(args):
         in_channels = 342
         out_channels = 342
         kernel_size = 5
+        Group = 18
+    elif args.dataset == 'NTU-Fi_HAR':
+        # NTU-Fi_HAR 数据集的路径
+        train_root_dir = '/home/aip/Vim-main/DATA/NTU-Fi_HAR/train_amp'
+        test_root_dir = '/home/aip/Vim-main/DATA/NTU-Fi_HAR/test_amp'
+
+        # 实例化 NTU-Fi_HAR 数据集
+        train_dataset = NTU_HAR_Dataset(root_dir=train_root_dir, modal='CSIamp')
+        test_dataset = NTU_HAR_Dataset(root_dir=test_root_dir, modal='CSIamp')
+
+        # 设置 FusionModel 参数
+        depth = 2
+        embed_dim = 342
+        channels = 1000
+        num_classes = 6
+        in_channels = 342
+        out_channels = 342
+        kernel_size = 5
+        Group = 18
     elif args.dataset == 'UT':
         # UT 数据集的路径
         root = '/home/aip/Vim-main/DATA'
@@ -44,11 +63,15 @@ def main(args):
         in_channels = 90
         out_channels = 90
         kernel_size = 5
+        Group = 30
     else:
         raise ValueError("Unsupported dataset. Choose either 'NTU' or 'UT'.")
 
     # 创建 DataLoader
-    if args.dataset == 'NTU':
+    if args.dataset == 'NTU-Fi-HumanID':
+        train_loader = DataLoader(dataset=train_dataset, batch_size=32, shuffle=True, num_workers=32)
+        test_loader = DataLoader(dataset=test_dataset, batch_size=32, shuffle=False, num_workers=32)
+    elif args.dataset == 'NTU-Fi_HAR':
         train_loader = DataLoader(dataset=train_dataset, batch_size=32, shuffle=True, num_workers=32)
         test_loader = DataLoader(dataset=test_dataset, batch_size=32, shuffle=False, num_workers=32)
     else:
@@ -58,7 +81,7 @@ def main(args):
     # 实例化融合模型
     fusion_model = FusionModel(depth=depth, embed_dim=embed_dim, channels=channels,
                                num_classes=num_classes, in_channels=in_channels,
-                               out_channels=out_channels, kernel_size=kernel_size).to(device)
+                               out_channels=out_channels, kernel_size=kernel_size, Group = Group).to(device)
     criterion = nn.CrossEntropyLoss()
 
     # 训练和测试
@@ -87,7 +110,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run model with different datasets.")
-    parser.add_argument('--dataset', choices=['NTU', 'UT'], required=True, help="Choose dataset: 'NTU' or 'UT'.")
+    parser.add_argument('--dataset', choices=['NTU-Fi-HumanID', 'NTU-Fi_HAR', 'UT'], required=True, help="Choose dataset: 'NTU' or 'UT'.")
     args = parser.parse_args()
 
     main(args)
