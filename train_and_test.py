@@ -86,6 +86,8 @@ def train(model, tensor_loader, val_loader, num_epochs, learning_rate, criterion
               f'验证损失：{val_loss:.9f}, '
               f'验证F1分数：{val_f1_score:.4f}')
     return
+
+# 定义测试函数，输出acc，F1 score和loss
 def test(model, tensor_loader, criterion, device):
     model.eval()
     test_acc = 0
@@ -118,6 +120,8 @@ def test(model, tensor_loader, criterion, device):
 
     print(f"test accuracy: {test_acc:.4f}, loss: {test_loss:.5f}, F1 score: {test_f1_score:.4f}")
     return
+
+# 备选测试函数，输出acc和loss
 def val(model, tensor_loader, criterion, device):
     model.eval()
     test_acc = 0
@@ -137,6 +141,7 @@ def val(model, tensor_loader, criterion, device):
         accuracy = (predict_y == labels.to(device)).sum().item() / labels.size(0)
         test_acc += accuracy
         test_loss += loss.item() * inputs.size(0)
+    
     test_acc = test_acc / len(tensor_loader)
     test_loss = test_loss / len(tensor_loader.dataset)
     print("Validation accuracy:{:.4f}, loss:{:.5f}".format(float(test_acc), float(test_loss)))
