@@ -27,7 +27,7 @@ def main(args):
         in_channels = 342
         out_channels = 342
         kernel_size = 5
-        Group = 18
+        groups = 19
     elif args.dataset == 'NTU-Fi_HAR':
         # NTU-Fi_HAR 数据集的路径
         train_root_dir = '/home/aip/Vim-main/DATA/NTU-Fi_HAR/train_amp'
@@ -45,7 +45,7 @@ def main(args):
         in_channels = 342
         out_channels = 342
         kernel_size = 5
-        Group = 18
+        groups = 19
     elif args.dataset == 'UT':
         # UT 数据集的路径
         root = '/home/aip/Vim-main/DATA'
@@ -63,7 +63,7 @@ def main(args):
         in_channels = 90
         out_channels = 90
         kernel_size = 5
-        Group = 30
+        groups = 3
     else:
         raise ValueError("Unsupported dataset. Choose either 'NTU' or 'UT'.")
 
