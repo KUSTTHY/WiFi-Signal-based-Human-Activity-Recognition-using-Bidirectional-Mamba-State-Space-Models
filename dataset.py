@@ -44,7 +44,7 @@ class NTU_HAR_Dataset(Dataset):
         x = (x - 42.3199) / 4.9802
         x = torch.FloatTensor(x)
         x = x.unsqueeze(0)
-        x = F.avg_pool1d(x, kernel_size=2, stride=2)
+        x = F.max_pool1d(x, kernel_size=2, stride=2)
         x = x.squeeze(0)
         # x = x[:, ::2]
         # x = x.reshape(342, 1000)
