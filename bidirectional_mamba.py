@@ -22,10 +22,10 @@ except ImportError:
 
 # 定义一维深度可分离卷积模块
 class DepthwiseSeparableConv1D(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size):
+    def __init__(self, in_channels, out_channels, groups, kernel_size):
         super(DepthwiseSeparableConv1D, self).__init__()
         # 深度卷积，groups=in_channels 使每个通道单独卷积
-        self.depthwise = nn.Conv1d(in_channels, in_channels * kernel_size, kernel_size, groups=in_channels // 18, padding=kernel_size // 2)
+        self.depthwise = nn.Conv1d(in_channels, in_channels * kernel_size, kernel_size, groups=groups, padding=kernel_size // 2)
         # 逐点卷积
         self.pointwise = nn.Conv1d(in_channels * kernel_size, out_channels, kernel_size=1)
 
@@ -386,6 +386,7 @@ class FusionModel(nn.Module):
         self.DW = DepthwiseSeparableConv1D(
             in_channels=in_channels,
             out_channels=out_channels,
+            groups=groups,
             kernel_size=kernel_size
         )
 
