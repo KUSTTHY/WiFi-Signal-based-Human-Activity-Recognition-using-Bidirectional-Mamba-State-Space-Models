@@ -18,9 +18,9 @@ python run.py --dataset UT
 ```
 
 **Note**: The project doesnot include the datasets. Please download the datasets via the following links:
-s. Please download the datasets from the following links:
 - <https://github.com/xyanchen/WiFi-CSI-Sensing-Benchmark> 
 
+## Citing Our Work
 The work can be cited as follows:
 
 [1] H. Tan, Y. Dao, H. Zhang, T. Guo and W. Wang, "WiFi Signal-Based Human Activity Recognition Using Bidirectional Mamba Models," submitted to 2025 IEEE 11th World Forum on Internet of Things (WF-IoT), Chengdu, 2025.
