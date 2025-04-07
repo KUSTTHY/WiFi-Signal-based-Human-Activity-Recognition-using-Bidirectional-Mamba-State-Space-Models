@@ -24,7 +24,7 @@ except ImportError:
 class DepthwiseSeparableConv1D(nn.Module):
     def __init__(self, in_channels, out_channels, groups, kernel_size):
         super(DepthwiseSeparableConv1D, self).__init__()
-        # 深度卷积，groups=in_channels 使每个通道单独卷积
+        # 深度卷积，groups=groups 使每个分组单独卷积
         self.depthwise = nn.Conv1d(in_channels, in_channels * kernel_size, kernel_size, groups=groups, padding=kernel_size // 2)
         # 逐点卷积
         self.pointwise = nn.Conv1d(in_channels * kernel_size, out_channels, kernel_size=1)
@@ -44,7 +44,7 @@ class Block(nn.Module):
         self.residual_in_fp32 = residual_in_fp32
         self.fused_add_norm = fused_add_norm
 
-        self.mixer = mixer_cls(dim)#这其实是Mamba的部分固定参数的调用
+        self.mixer = mixer_cls(dim)
         self.norm = norm_cls(dim)
 
         self.drop_path = DropPath(drop_path)
@@ -95,9 +95,9 @@ class Block(nn.Module):
         return hidden_states, residual
 
 def create_block(
-        d_model,                                #token维度
-        ssm_cfg=None,                           #ssm模型的配置文件
-        norm_epsilon=1e-5,                      #
+        d_model,
+        ssm_cfg=None,
+        norm_epsilon=1e-5, 
         drop_path=0.,
         rms_norm=False,
         residual_in_fp32=False,
@@ -105,17 +105,17 @@ def create_block(
         layer_idx=None,
         device=None,
         dtype=None,
-        if_bimamba=False,                       #是否使用双向mamba扫描
+        if_bimamba=False,
         bimamba_type="none",
         if_divide_out=False,
         init_layer_scale=None,
 ):
-    if if_bimamba:#如果使用双向mamba扫描
-        bimamba_type = "v1"                     #这是一个模型的版本号
+    if if_bimamba:
+        bimamba_type = "v1" 
     if ssm_cfg is None:
         ssm_cfg = {}
     factory_kwargs = {"device": device, "dtype": dtype}
-    mixer_cls = partial(                        #代表着VIM Encoder对class token的拼接方式,cls token可以拼接到不同位置（所有token前面，所有token中间，...或是随机位置）
+    mixer_cls = partial(
         Mamba,
         layer_idx=layer_idx,
         bimamba_type=bimamba_type,
@@ -124,9 +124,9 @@ def create_block(
         **ssm_cfg,
         **factory_kwargs
     )
-    norm_cls=partial(                           #对于class token的normalization函数
+    norm_cls=partial(
         nn.LayerNorm if not rms_norm else RMSNorm,eps=norm_epsilon,**factory_kwargs
-    )                                           #eps用于避免归一化过程中分母为0的情况
+    )
     block =Block(
         d_model,
         mixer_cls,
@@ -143,8 +143,8 @@ class Bidirectional_Mamba(nn.Module):
                  depth=2,                        #需要构造的block的个数
                  embed_dim=192,
                  channels=3,
-                 num_classes=1000,                #这里用imagenet做分类任务所以有1000个类，也就代表了最后的mlp的输出层包含1000个节点
-                 ssm_cfg=None,                    #ssm的配置文件
+                 num_classes=7,
+                 ssm_cfg=None,
                  drop_rate=0.1,                    #drop_rate是针对于dropout的频率（对某个节点进行失活的操作）
                  drop_path_rate=0.1,              #drop_path_rate是针对drop_path的频率（对某个层进行失活的操作）
                  norm_epsilon:float=1e-5,
@@ -155,12 +155,12 @@ class Bidirectional_Mamba(nn.Module):
                  dtype=None,
                  if_rope=False,
                  if_bidirectional=True,
-                 final_pool_type='none',          #最后池化层的类型
-                 if_abs_pos_embed=False,          #在位置编码的时候是不是需要用绝对值编码（有两种位置编码方式：1、直接给出的绝对值位置编码 2、可学习的位置编码）
-                 if_rope_residual=False,          #对 residual的rope 旨在增加鲁棒性
-                 flip_img_sequences_ratio=-1.,    #image_squence的反转概率
+                 final_pool_type='none', 
+                 if_abs_pos_embed=False, 
+                 if_rope_residual=False, 
+                 flip_img_sequences_ratio=-1.,
                  if_bimamba=True,
-                 bimamba_type="none",             #表示使用的mamba的版本
+                 bimamba_type="none", 
                  if_cls_token=False,              #拼不拼clstoken
                  if_divide_out=False,
                  init_layer_scale=None,
@@ -181,7 +181,7 @@ class Bidirectional_Mamba(nn.Module):
         self.if_cls_token = if_cls_token
         self.use_double_cls_token = use_double_cls_token            #这个拼接clstoken的方式是头拼一个尾拼一个
         self.use_middle_cls_token = use_middle_cls_token            #这个拼接clstoken的方式是中间拼一个
-        self.num_tokens = 1 if if_cls_token else 0                  #表示拼了几个cls token进去？存疑
+        self.num_tokens = 1 if if_cls_token else 0 
         self.num_classes = num_classes
         self.d_model = self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
         num_patches = channels
@@ -227,7 +227,6 @@ class Bidirectional_Mamba(nn.Module):
         )
 
         self.norm_f = (nn.LayerNorm if not rms_norm else RMSNorm)(embed_dim, eps=norm_epsilon,**factory_kwargs)
-        #trunc_normal_函数是一个用于对张量进行截断正态分布初始化的函数。它通常用于初始化神经网络的权重或偏置。
         if if_abs_pos_embed:
             trunc_normal_(self.pos_embed, std=.02)
 
@@ -283,7 +282,7 @@ class Bidirectional_Mamba(nn.Module):
         if not self.if_bidirectional:#只使用单向扫描（所以单向扫描就既可以选择正向单向扫描进行rope，也可以选择反向单项扫描进行rope）
             for layer in self.layers:
 
-                if if_flip_img_suquences and self.if_rope:#反转序列并使用加强版的position Embedding
+                if if_flip_img_suquences and self.if_rope:
                     hidden_states = hidden_states.flip([1])
                     if residual is not None:
                         residual = residual.flip([1])
@@ -294,7 +293,7 @@ class Bidirectional_Mamba(nn.Module):
                     if residual is not None and self.if_rope_residuals:
                         residual = self.rope(residual)
 
-                if if_flip_img_suquences and self.if_rope:#这里并不是跟上上段代码重复，而是filp了之后要再反转过来
+                if if_flip_img_suquences and self.if_rope:
                     hidden_states = hidden_states.flip([1])
                     if residual is not None:
                         residual = residual.flip([1])
@@ -337,7 +336,6 @@ class Bidirectional_Mamba(nn.Module):
                 residual_in_fp32=self.residual_in_fp32,
             )
 
-        # return only cls token if it exists
         if self.if_cls_token:
             if self.use_double_cls_token:
                 return (hidden_states[:,token_position[0],:] + hidden_states[:,token_position[1],:]) / 2
@@ -350,7 +348,7 @@ class Bidirectional_Mamba(nn.Module):
                     return hidden_states[:,token_position,:]
 
         if self.final_pool_type == 'none':
-            return hidden_states[:,-1,:]#这个切片是为了之后的mlp所做出的妥协
+            return hidden_states[:,-1,:]
         elif self.final_pool_type == 'mean':
             return hidden_states.mean(dim=1)
         elif self.final_pool_type == 'max':
@@ -368,7 +366,7 @@ class Bidirectional_Mamba(nn.Module):
         if self.final_pool_type == 'max':
             x = x.max(dim=1)[0]
         return x
-
+# 给出各个参数定义
 class FusionModel(nn.Module):
     def __init__(self, depth, embed_dim, channels, num_classes, in_channels, out_channels, kernel_size):
         super(FusionModel, self).__init__()
