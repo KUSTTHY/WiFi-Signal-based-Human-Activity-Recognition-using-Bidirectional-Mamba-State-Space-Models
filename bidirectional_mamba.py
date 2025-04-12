@@ -7,6 +7,7 @@
 import torch
 import torch.nn as nn
 from torch import Tensor
+import torch.nn.functional as F
 from timm.models.layers import trunc_normal_
 from timm.models.layers import DropPath
 from functools import partial
@@ -364,7 +365,7 @@ class Bidirectional_Mamba(nn.Module):
             return x
         x = self.head(x)
         if self.final_pool_type == 'max':
-            x = x.max(dim=1)[0]
+            x = F.softmax(x, dim=1)
         return x
 # 给出各个参数定义
 class FusionModel(nn.Module):
