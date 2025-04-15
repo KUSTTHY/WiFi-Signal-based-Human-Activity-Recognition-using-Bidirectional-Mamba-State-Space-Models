@@ -46,8 +46,6 @@ class NTU_HAR_Dataset(Dataset):
         x = x.unsqueeze(0)
         x = F.max_pool1d(x, kernel_size=8, stride=8)
         x = x.squeeze(0)
-        # x = x[:, ::2]
-        # x = x.reshape(342, 1000)
         if self.transform:
             x = self.transform(x)
         x = torch.FloatTensor(x)
